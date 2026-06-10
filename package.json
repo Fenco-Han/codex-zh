@@ -10,7 +10,7 @@
     "activate-profile": "node scripts/activate-provider-profile.mjs",
     "config": "node scripts/generate-codex-config.mjs",
     "test-provider": "node scripts/test-provider.mjs",
-    "test": "node --test test/*.test.mjs"
+    "test": "node scripts/run-tests.mjs"
   },
   "engines": {
     "node": ">=20"
