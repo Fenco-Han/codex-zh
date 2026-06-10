@@ -36,6 +36,7 @@ concurrency:
 jobs:
   windows-installer:
     name: Build Windows installer
+    if: startsWith(github.event.release.tag_name || github.ref_name, 'v')
     runs-on: windows-2022
     env:
       CODEX_WINDOWS_APP_ZIP_URL: ${{ secrets.CODEX_WINDOWS_APP_ZIP_URL }}

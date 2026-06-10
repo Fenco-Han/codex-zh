@@ -7,6 +7,7 @@ const workflow = readFileSync(".github/workflows/release.yml", "utf8");
 test("release workflow packages Windows installer after GitHub Release publish", () => {
   assert.match(workflow, /push:\s*\n\s+tags:\s*\n\s+- "v\*"/u);
   assert.match(workflow, /release:\s*\n\s+types:\s*\n\s+- published/u);
+  assert.match(workflow, /if: startsWith\(github\.event\.release\.tag_name \|\| github\.ref_name, 'v'\)/u);
   assert.match(workflow, /runs-on: windows-2022/u);
   assert.match(workflow, /actions\/checkout@v6/u);
   assert.match(workflow, /actions\/setup-node@v6/u);
