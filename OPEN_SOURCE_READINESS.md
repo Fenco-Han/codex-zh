@@ -28,20 +28,22 @@ Repository secrets for automatic release builds:
 
 | Secret | Required | Purpose |
 | --- | --- | --- |
-| `CODEX_WINDOWS_APP_ZIP_URL` | Optional | Private or public URL to a `.zip` containing the unpacked official Windows Codex app folder. If unset, the workflow installs the official Codex app with `winget install Codex -s msstore`. |
-| `CODEX_WINDOWS_APP_ZIP_SHA256` | Recommended | SHA-256 of the source zip. The workflow fails if it does not match. |
+| `CODEX_WINDOWS_APP_ZIP_URL` | Yes | Private or public URL to a pinned `.zip` containing one tested official Windows Codex app folder. |
+| `CODEX_WINDOWS_APP_ZIP_SHA256` | Yes | SHA-256 of the source zip. The workflow fails if it does not match. |
 | `CODEX_WINDOWS_APP_LABEL` | Recommended | Installer filename label, for example `OpenAI.Codex-26.608.1337.0`. |
 
-If `CODEX_WINDOWS_APP_ZIP_URL` is set, the source zip must contain a folder with:
+The source zip must contain a folder with:
 
 - `Codex.exe`
 - `resources/app.asar`
+
+Do not default release builds to `winget install Codex -s msstore`. That command installs the current Microsoft Store version, so a Store update can silently change the upstream Codex version used by Codex-ZH. Codex-ZH releases should build from an explicitly tested Codex app version and SHA-256.
 
 When `v*` tag is pushed or a release is published, the workflow:
 
 1. Runs `npm test`.
 2. Installs Inno Setup on the Windows runner.
-3. Downloads and verifies the official Codex app zip, or installs the official Codex app from Microsoft Store with winget.
+3. Downloads and verifies the pinned official Codex app zip.
 4. Builds the staged Codex-ZH app.
 5. Builds the Inno Setup installer and `.sha256` file.
 6. Installs the generated installer silently and runs `codex doctor`.
@@ -60,7 +62,7 @@ git push origin v0.1.1
 Before publishing a release:
 
 - Run `npm test`.
-- Confirm the release packaging workflow can access the official Codex app, either through the optional source zip secret or through Microsoft Store winget install.
+- Confirm the release packaging workflow can access the pinned official Codex app source zip and matching SHA-256.
 - Verify `codex.exe doctor --summary --ascii --no-color` returns `0 fail`.
 - Verify Simplified Chinese defaults.
 - Verify Wokey public test key can complete a minimal request.
