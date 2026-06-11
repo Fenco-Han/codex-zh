@@ -43,6 +43,23 @@ SHA256：`473b30eb8d1e450fc21f8899bbe7c10b74a62a27ec4cf38786a66795ec352711`
 
 Wokey 模板会预填公开测试 Key，方便第一次验证流程。长期使用或生产使用，请换成自己的中转站 Key。
 
+## 办公实战教程
+
+Codex 高效办公实战课，原创“问补做”套路 · 真实办公案例。
+
+先从教程总入口开始看：[Codex-ZH 办公实战教程第一季](https://focuxdot.github.io/codex-zh/office-tutorials/)。
+
+| 教程 | 主题 |
+| --- | --- |
+| 01 | [开箱即用：整理混乱文件夹](https://focuxdot.github.io/codex-zh/office-tutorials/01-folder-cleanup.html) |
+| 02 | [快速提案：散装资料变方案](https://focuxdot.github.io/codex-zh/office-tutorials/02-proposal-from-materials.html) |
+| 03 | [数据清洗：乱报名表变统计数据](https://focuxdot.github.io/codex-zh/office-tutorials/03-data-cleaning.html) |
+| 04 | [高效设计：一句想法变 PPT 初稿](https://focuxdot.github.io/codex-zh/office-tutorials/04-ppt-first-draft.html) |
+| 05 | [从零造工具：CSV / Markdown 本地转换器](https://focuxdot.github.io/codex-zh/office-tutorials/05-format-converter.html) |
+| 06 | [批量处理：一堆活动截图一次整理好](https://focuxdot.github.io/codex-zh/office-tutorials/06-batch-images.html) |
+| 07 | [知识点到短视频：会员积分讲得不生硬](https://focuxdot.github.io/codex-zh/office-tutorials/07-knowledge-to-short-video.html) |
+| 08 | [长素材到高光：直播回放拆成剪辑清单](https://focuxdot.github.io/codex-zh/office-tutorials/08-long-material-to-highlights.html) |
+
 ## 功能对比
 
 ### Browser

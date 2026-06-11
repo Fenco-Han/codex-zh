@@ -1,0 +1,95 @@
+﻿<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>本地 CSV / Markdown 转换工具</title>
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+  <main class="shell">
+    <header class="hero">
+      <div>
+        <p class="eyebrow">离线 · 本地 · 不上传</p>
+        <h1>CSV / Markdown 本地转换工具</h1>
+        <p class="subtitle">直接在浏览器里读取文件并完成转换，适合同事发来的客户名单、会议纪要等内部资料。</p>
+      </div>
+      <div class="privacy-card">
+        <strong>隐私说明</strong>
+        <span>本工具只有静态 HTML、CSS、JS，不连接服务器，不会把文件上传到外网。</span>
+      </div>
+    </header>
+
+    <section class="panel upload-panel">
+      <label for="fileInput" class="drop-zone" id="dropZone">
+        <span class="drop-icon">⇩</span>
+        <strong>选择或拖入 CSV / Markdown 文件</strong>
+        <small>支持 .csv、.md、.markdown；也可以粘贴文本到下方。</small>
+        <input id="fileInput" type="file" accept=".csv,.md,.markdown,text/csv,text/markdown,text/plain">
+      </label>
+      <div class="controls">
+        <label>
+          文件类型
+          <select id="typeSelect">
+            <option value="auto">自动识别</option>
+            <option value="csv">CSV</option>
+            <option value="markdown">Markdown</option>
+          </select>
+        </label>
+        <label>
+          CSV 分隔符
+          <select id="delimiterSelect">
+            <option value="auto">自动识别</option>
+            <option value=",">逗号 ,</option>
+            <option value=";">分号 ;</option>
+            <option value="tab">制表符 Tab</option>
+            <option value="|">竖线 |</option>
+          </select>
+        </label>
+        <button id="convertButton" type="button">转换 / 预览</button>
+      </div>
+      <textarea id="sourceInput" spellcheck="false" placeholder="也可以直接把 CSV 或 Markdown 内容粘贴到这里。"></textarea>
+    </section>
+
+    <section class="grid">
+      <article class="panel">
+        <div class="panel-title">
+          <div>
+            <p class="eyebrow">CSV</p>
+            <h2>JSON 结果</h2>
+          </div>
+          <button id="downloadJsonButton" type="button" disabled>下载 JSON</button>
+        </div>
+        <pre id="jsonOutput" class="code-output">等待 CSV 输入...</pre>
+      </article>
+
+      <article class="panel">
+        <div class="panel-title">
+          <div>
+            <p class="eyebrow">CSV</p>
+            <h2>表格预览</h2>
+          </div>
+          <button id="downloadHtmlButton" type="button" disabled>下载 HTML</button>
+        </div>
+        <div id="tablePreview" class="preview empty">等待 CSV 输入...</div>
+      </article>
+    </section>
+
+    <section class="panel">
+      <div class="panel-title">
+        <div>
+          <p class="eyebrow">Markdown</p>
+          <h2>HTML 预览</h2>
+        </div>
+        <button id="downloadMarkdownHtmlButton" type="button" disabled>下载 HTML</button>
+      </div>
+      <div id="markdownPreview" class="markdown-preview empty">等待 Markdown 输入...</div>
+    </section>
+
+    <footer>
+      <span id="statusText">准备就绪。</span>
+    </footer>
+  </main>
+  <script src="./app.js"></script>
+</body>
+</html>

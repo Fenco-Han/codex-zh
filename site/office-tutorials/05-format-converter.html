@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>从零造工具：用 Codex-ZH 把格式转换器聊出来</title>
+  <link rel="stylesheet" href="./tutorial-page.css">
+</head>
+<body>
+  <main class="page">
+    <nav class="topbar">
+      <a class="wordmark" href="./index.html">Codex-ZH 办公实战</a>
+      <span class="issue">实战手记 · 第 <b>05</b> 篇</span>
+    </nav>
+
+    <header class="hero">
+      <div class="hero-num">05</div>
+      <div>
+        <div class="eyebrow">第 05 个办公场景</div>
+        <h1>从零造工具：把格式转换器聊出来</h1>
+        <p class="lead">
+          <span class="lead-line">想要高效办公，唯有套路得 AI。办公不是拼指令，而是会交代活。</span>
+          <span class="lead-line accent">Codex-ZH 办公实战只记一个套路：问补做。</span>
+        </p>
+      </div>
+    </header>
+
+    <section class="setup" aria-label="开始前交代">
+      <div class="card scene">
+        <div class="kicker">今天这件活</div>
+        <h2>场景</h2>
+        <p>你经常收到同事发来的 CSV 和 Markdown，要临时转成 JSON、表格或 HTML。在线网站能用，但内部资料传出去不放心。</p>
+      </div>
+      <div class="card method">
+        <div class="kicker">问补做</div>
+        <div class="method-row">
+          <p><span class="tag">问</span>　先说你现在最烦的事。</p>
+          <p><span class="tag">补</span>　说清材料在哪、要改成什么样、哪些不能碰。</p>
+          <p><span class="tag">做</span>　聊清楚了，结果就出来了。</p>
+          <p class="slogan">把活聊清楚，也就做完了。</p>
+        </div>
+      </div>
+    </section>
+
+    <div class="compass" aria-hidden="true">
+      <span class="label">一次对话，顺着往下聊：</span>
+      <span class="seq">
+        <span class="pip">问</span><span class="arr">→</span>
+        <span class="pip">补</span><span class="arr">→</span>
+        <span class="pip">做</span>
+      </span>
+    </div>
+
+    <section class="rail" aria-label="交互过程">
+      <article class="station">
+        <div class="rail-col"><span class="mark">问</span></div>
+        <div class="station-body">
+          <div class="station-head">
+            <h2>先说你不想再找在线网站</h2>
+            <p class="hint">你不用先说技术方案，只要说清楚反复遇到的麻烦和担心。</p>
+          </div>
+          <div class="quote">我经常要把同事发来的 CSV 和 Markdown 转成别的格式，每次找在线网站都很麻烦，还担心资料传出去。能不能帮我做个本地小工具？</div>
+          <figure class="shot">
+            <div class="shot-bar">
+              <span class="shot-dots"><i></i><i></i><i></i></span>
+              <span class="shot-title">Codex-ZH · 本地格式转换器</span>
+            </div>
+            <img src="assets/05-format-converter/converter-chat-01-ask.png" alt="你说格式转换麻烦、担心资料上传外网，Codex-ZH 开始做本地工具">
+            <figcaption class="shot-cap">这里 Codex-ZH 先理解成<b>“无联网的本地转换小工具”</b>。如果它一开始倾向脚本方案，下一步再补清楚工具形态就行。</figcaption>
+          </figure>
+        </div>
+      </article>
+
+      <p class="bridge">做工具时，第二步要补的是边界：输入是什么、输出是什么、在哪里运行、哪些事情不能发生。</p>
+
+      <article class="station">
+        <div class="rail-col"><span class="mark">补</span></div>
+        <div class="station-body">
+          <div class="station-head">
+            <h2>把工具形态和边界补齐</h2>
+            <p class="hint">这一步说清“本地网页、浏览器里完成、不上传外网”。</p>
+          </div>
+          <div class="quote">做成一个本地网页就行，所有转换都在浏览器里完成，不要上传外网。资料样例在桌面上的“格式转换素材”文件夹，结果放到桌面上的“格式转换工具”文件夹。工具要能把 CSV 转成 JSON 和表格预览，也能把 Markdown 转成 HTML 预览。最好带 README 和示例文件。</div>
+          <figure class="shot">
+            <div class="shot-bar">
+              <span class="shot-dots"><i></i><i></i><i></i></span>
+              <span class="shot-title">Codex-ZH · 本地格式转换器</span>
+            </div>
+            <img src="assets/05-format-converter/converter-chat-02-clarify.png" alt="你补充本地网页、浏览器内转换、不上传外网、输入输出和目录">
+            <figcaption class="shot-cap">这句话把工具边界说清楚了：本地网页、CSV 转 JSON 和表格、Markdown 转 HTML、带说明和示例。</figcaption>
+          </figure>
+        </div>
+      </article>
+
+      <p class="bridge">工具做好以后，先看它是不是能打开、能预览、能下载结果。不要一开始就追求功能大全。</p>
+
+      <article class="station">
+        <div class="rail-col"><span class="mark">做</span></div>
+        <div class="station-body">
+          <div class="station-head">
+            <h2>看它交付了什么</h2>
+            <p class="hint">这次输出了一个可以直接打开的静态网页工具。</p>
+          </div>
+          <div class="quote">结果里有 index.html、app.js、styles.css、README.md 和 examples；功能包括 CSV 转 JSON、CSV 表格预览、Markdown 转 HTML 预览。</div>
+          <figure class="shot">
+            <div class="shot-bar">
+              <span class="shot-dots"><i></i><i></i><i></i></span>
+              <span class="shot-title">Codex-ZH · 本地格式转换器</span>
+            </div>
+            <img src="assets/05-format-converter/converter-chat-03-done.png" alt="Codex-ZH 生成本地格式转换器，并列出文件和功能">
+            <figcaption class="shot-cap">完成页会列出核心文件和功能。你可以直接打开 index.html，把同事发来的内容放进去试。</figcaption>
+          </figure>
+        </div>
+      </article>
+    </section>
+
+    <section class="result" aria-label="本篇交付物">
+      <div class="result-card">
+        <div class="frame">
+          <img src="assets/05-format-converter/converter-preview.png" alt="CSV Markdown 本地转换工具预览">
+        </div>
+        <div>
+          <div class="kicker">本篇交付物</div>
+          <h2>做到这样，小工具就能先用起来</h2>
+          <p class="sub">这个工具不是复杂系统，但已经解决了一个明确的办公痛点。</p>
+          <ul class="done-list">
+            <li>不需要上传内部资料到外网。</li>
+            <li>CSV 可以转 JSON，也可以直接看表格预览。</li>
+            <li>Markdown 可以转成 HTML 预览，并下载结果。</li>
+          </ul>
+          <ul class="file-list">
+            <li><a href="downloads/05-format-converter/index.html"><code>index.html</code></a>：直接打开使用</li>
+            <li><a href="downloads/05-format-converter/app.js"><code>app.js</code></a>：转换逻辑</li>
+            <li><a href="downloads/05-format-converter/styles.css"><code>styles.css</code></a>：页面样式</li>
+            <li><a href="downloads/05-format-converter/README.md"><code>README.md</code></a>：使用说明</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section class="takeaway" aria-label="收尾">
+      <div class="kicker">收工前，把这个套路带走</div>
+      <h2>做小工具时，先把最常做的那一步做顺</h2>
+      <p class="sub">下次你反复做同一个转换动作，不用先想技术栈。先说清楚麻烦，再补输入、输出和边界，Codex-ZH 就能先做一个能打开、能验证、能继续改的小版本。</p>
+      <div class="handoff">
+        <span><b>问：</b>我反复遇到什么麻烦。</span>
+        <span><b>补：</b>输入是什么，输出要什么，哪些边界不能碰。</span>
+        <span><b>做：</b>先验证能打开、能转换、能下载。</span>
+      </div>
+      <p class="closing-line">不是先会写工具，而是先把小工具要替你省哪一步聊清楚。</p>
+    </section>
+
+    <nav class="pager" aria-label="教程导航">
+      <a href="./04-ppt-first-draft.html">
+        <span class="dir">‹ 上一篇</span>
+        <span class="ttl">高效设计：一句想法变 PPT 初稿</span>
+      </a>
+      <a class="next" href="./06-batch-images.html">
+        <span class="dir">下一篇 ›</span>
+        <span class="ttl">批量处理：活动截图一次整理好</span>
+      </a>
+    </nav>
+
+    <footer>Codex 高效办公实战课，原创“问补做”套路 · 真实办公案例。</footer>
+  </main>
+</body>
+</html>

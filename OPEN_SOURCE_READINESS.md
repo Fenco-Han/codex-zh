@@ -15,6 +15,7 @@ Codex-ZH is for Windows users who want:
 - User API keys: only written to the user's local Codex config after backup and merge.
 - Build hosts: keep IPs, users, SSH aliases, RDP endpoints, passwords, private keys, and private runbooks out of the public repo.
 - `docs/` is treated as local/internal material and is ignored by git.
+- `skills/` is treated as local/internal workflow material and is ignored by git. It may hold private authoring and review skills, but those process files are not part of the public release.
 
 ## Release Boundary
 

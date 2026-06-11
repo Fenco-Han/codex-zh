@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>数据清洗：用 Codex-ZH 把乱报名表聊成可统计数据</title>
+  <link rel="stylesheet" href="./tutorial-page.css">
+</head>
+<body>
+  <main class="page">
+    <nav class="topbar">
+      <a class="wordmark" href="./index.html">Codex-ZH 办公实战</a>
+      <span class="issue">实战手记 · 第 <b>03</b> 篇</span>
+    </nav>
+
+    <header class="hero">
+      <div class="hero-num">03</div>
+      <div>
+        <div class="eyebrow">第 03 个办公场景</div>
+        <h1>数据清洗：把乱报名表聊成可统计数据</h1>
+        <p class="lead">
+          <span class="lead-line">想要高效办公，唯有套路得 AI。办公不是拼指令，而是会交代活。</span>
+          <span class="lead-line accent">Codex-ZH 办公实战只记一个套路：问补做。</span>
+        </p>
+      </div>
+    </header>
+
+    <section class="setup" aria-label="开始前交代">
+      <div class="card scene">
+        <div class="kicker">今天这件活</div>
+        <h2>场景</h2>
+        <p>你手里有一张活动报名表，手机号格式不一、城市写法不统一、渠道别名混在一起，还有重复报名和测试记录。最怕的不是表难看，而是后面统计出来的数不准。</p>
+      </div>
+      <div class="card method">
+        <div class="kicker">问补做</div>
+        <div class="method-row">
+          <p><span class="tag">问</span>　先说你现在最烦的事。</p>
+          <p><span class="tag">补</span>　说清材料在哪、要改成什么样、哪些不能碰。</p>
+          <p><span class="tag">做</span>　聊清楚了，结果就出来了。</p>
+          <p class="slogan">把活聊清楚，也就做完了。</p>
+        </div>
+      </div>
+    </section>
+
+    <div class="compass" aria-hidden="true">
+      <span class="label">一次对话，顺着往下聊：</span>
+      <span class="seq">
+        <span class="pip">问</span><span class="arr">→</span>
+        <span class="pip">补</span><span class="arr">→</span>
+        <span class="pip">做</span>
+      </span>
+    </div>
+
+    <section class="rail" aria-label="交互过程">
+      <article class="station">
+        <div class="rail-col"><span class="mark">问</span></div>
+        <div class="station-body">
+          <div class="station-head">
+            <h2>先说你怕统计不准</h2>
+            <p class="hint">不用先讲函数、公式或清洗规则。把你最担心的事说出来，Codex-ZH 会先帮你拆问题。</p>
+          </div>
+          <div class="quote">我有一张报名表，手机号、城市、渠道看起来都有点乱，还有重复报名。我怕最后统计出来不准，你先帮我看看该怎么清理。</div>
+          <figure class="shot">
+            <div class="shot-bar">
+              <span class="shot-dots"><i></i><i></i><i></i></span>
+              <span class="shot-title">Codex-ZH · 报名表清洗</span>
+            </div>
+            <img src="assets/03-data-cleaning/data-chat-01-ask.png" alt="你先说报名表乱、怕统计不准，Codex-ZH 帮你拆出清洗范围">
+            <figcaption class="shot-cap">这里 Codex-ZH 没有直接动表，而是先把问题拆成几类：<b>手机号、城市、渠道、重复报名、异常记录和输出结果</b>。</figcaption>
+          </figure>
+        </div>
+      </article>
+
+      <p class="bridge">当它把范围问出来，你就补三件事：文件在哪、结果要什么、原始表哪些地方不能碰。</p>
+
+      <article class="station">
+        <div class="rail-col"><span class="mark">补</span></div>
+        <div class="station-body">
+          <div class="station-head">
+            <h2>把路径和底线补齐</h2>
+            <p class="hint">这一步不是写技术规则，而是把办公里的底线说清楚：原表别动、结果另存、要有问题记录。</p>
+          </div>
+          <div class="quote">资料在桌面上的“报名表清洗”文件夹，里面有 raw_signups.csv 和 cleaning_rules.md。原始表别动，结果放到桌面上的“报名表清洗结果”文件夹。最后给我清理后的表、问题记录、简单汇总，最好再有一个 Excel 汇总表。你先确认一下会怎么处理。</div>
+          <figure class="shot">
+            <div class="shot-bar">
+              <span class="shot-dots"><i></i><i></i><i></i></span>
+              <span class="shot-title">Codex-ZH · 报名表清洗</span>
+            </div>
+            <img src="assets/03-data-cleaning/data-chat-02-clarify.png" alt="你补充文件路径、原表不动、输出文件和 Excel 汇总表要求">
+            <figcaption class="shot-cap">Codex-ZH 会把你的话收敛成明确清单：哪些字段要统一、哪些记录要删除、会输出哪些文件。这样你能先看懂它准备怎么做。</figcaption>
+          </figure>
+        </div>
+      </article>
+
+      <p class="bridge">方案清楚以后，再确认执行。接下来你看的重点不是过程多复杂，而是它有没有交付可检查的结果。</p>
+
+      <article class="station">
+        <div class="rail-col"><span class="mark">做</span></div>
+        <div class="station-body">
+          <div class="station-head">
+            <h2>确认后看交付结果</h2>
+            <p class="hint">这次它生成了清理后的 CSV、问题记录、摘要和 Excel 汇总表。</p>
+          </div>
+          <div class="quote">可以，就按这个方案清理。</div>
+          <figure class="shot">
+            <div class="shot-bar">
+              <span class="shot-dots"><i></i><i></i><i></i></span>
+              <span class="shot-title">Codex-ZH · 报名表清洗</span>
+            </div>
+            <img src="assets/03-data-cleaning/data-chat-03-done.png" alt="Codex-ZH 完成数据清洗，并列出输出文件、汇总结果和主要处理">
+            <figcaption class="shot-cap">完成页会告诉你原始记录数、有效记录数、问题记录数，以及主要处理动作。你不用猜它删了什么，<b>直接看问题记录就行</b>。</figcaption>
+          </figure>
+        </div>
+      </article>
+    </section>
+
+    <section class="result" aria-label="本篇交付物">
+      <div class="result-card">
+        <div class="frame">
+          <img src="assets/03-data-cleaning/data-cleaning-summary.png" alt="报名表清洗结果预览">
+        </div>
+        <div>
+          <div class="kicker">本篇交付物</div>
+          <h2>做到这样，表就能拿去统计</h2>
+          <p class="sub">这次清洗不是把表变漂亮，而是把数据变得可追溯、可复核。</p>
+          <ul class="done-list">
+            <li>原始 12 条记录保留，清理后有效记录 7 条。</li>
+            <li>11 条问题记录单独列出，能看到删除、异常和字段修正原因。</li>
+            <li>生成 Excel 汇总表，方便发给同事继续检查。</li>
+          </ul>
+          <ul class="file-list">
+            <li><a href="downloads/03-data-cleaning/cleaned_signups.csv"><code>cleaned_signups.csv</code></a>：清理后可统计数据</li>
+            <li><a href="downloads/03-data-cleaning/issues.csv"><code>issues.csv</code></a>：问题记录</li>
+            <li><a href="downloads/03-data-cleaning/summary.md"><code>summary.md</code></a>：清洗摘要</li>
+            <li><a href="downloads/03-data-cleaning/signup_cleaning_summary.xlsx"><code>signup_cleaning_summary.xlsx</code></a>：Excel 汇总表</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section class="takeaway" aria-label="收尾">
+      <div class="kicker">收工前，把这个套路带走</div>
+      <h2>数据清洗最怕的不是不会公式，而是不敢说清楚要保留什么、要删什么</h2>
+      <p class="sub">下次你遇到一张乱表，不用先想怎么写函数。先把担心说出来，再补清原表、规则、输出和不能碰的地方，Codex-ZH 就能把表变成可检查的交付物。</p>
+      <div class="handoff">
+        <span><b>问：</b>我怕哪里统计不准。</span>
+        <span><b>补：</b>表在哪，按什么规则清，原表能不能动，结果要放哪。</span>
+        <span><b>做：</b>看清理结果、问题记录和汇总表是否能复核。</span>
+      </div>
+      <p class="closing-line">表格工作不是先会公式，而是先把清洗标准聊清楚。</p>
+    </section>
+
+    <nav class="pager" aria-label="教程导航">
+      <a href="./02-proposal-from-materials.html">
+        <span class="dir">‹ 上一篇</span>
+        <span class="ttl">快速提案：散装资料变方案</span>
+      </a>
+      <a class="next" href="./04-ppt-first-draft.html">
+        <span class="dir">下一篇 ›</span>
+        <span class="ttl">高效设计：一句想法变 PPT 初稿</span>
+      </a>
+    </nav>
+
+    <footer>Codex 高效办公实战课，原创“问补做”套路 · 真实办公案例。</footer>
+  </main>
+</body>
+</html>

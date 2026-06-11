@@ -2,6 +2,7 @@ node_modules/
 dist/
 docs/
 examples/
+skills/
 vendor/
 tmp/
 .DS_Store
