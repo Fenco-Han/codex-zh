@@ -38,6 +38,10 @@ npm run config -- --preset openrouter --model openai/gpt-4.1 --api-key-env OPENR
 3. Run `npm test` before opening a PR.
 4. Update README or docs when changing user-visible behavior.
 
+## Maintainer Pushes
+
+Maintainers pushing directly to `focuxdot/codex-zh` must follow the mandatory GitHub identity check in [OPEN_SOURCE_READINESS.md](OPEN_SOURCE_READINESS.md#mandatory-maintainer-push-identity). Do not use the workstation's default `github.com` SSH identity unless it verifies as `focuxdot`.
+
 ## Reporting Issues
 
 Use GitHub Issues and include:

@@ -21,6 +21,47 @@ Codex-ZH is for Windows users who want:
 
 Source code can be public. Release artifacts need a separate maintainer decision because the Windows installer is built from a user-supplied official Codex app copy and resource-level patches.
 
+## Mandatory Maintainer Push Identity
+
+**Stop before every `git push`: this repository must be pushed as `focuxdot`, not the machine's default GitHub identity.**
+
+On this workstation, the default `github.com` SSH key may authenticate as `brucephaner`, which only has read access to `focuxdot/codex-zh`. Do not run a plain `git push origin main` unless the active SSH identity has already been verified as `focuxdot`.
+
+Required identity check:
+
+```bash
+ssh -i ~/.ssh/github_focuxdot_account -o IdentitiesOnly=yes -T git@github.com
+```
+
+The expected response is:
+
+```text
+Hi focuxdot! You've successfully authenticated, but GitHub does not provide shell access.
+```
+
+If the response says `Hi brucephaner!`, stop and do not push.
+
+Required push command for `main`:
+
+```bash
+GIT_SSH_COMMAND='ssh -i ~/.ssh/github_focuxdot_account -o IdentitiesOnly=yes' git push origin main
+```
+
+Required push command for release tags:
+
+```bash
+GIT_SSH_COMMAND='ssh -i ~/.ssh/github_focuxdot_account -o IdentitiesOnly=yes' git push origin v0.1.1
+```
+
+After pushing, confirm remote sync:
+
+```bash
+git rev-parse HEAD
+git ls-remote origin refs/heads/main
+```
+
+The two SHAs must match for `main` pushes. `gh auth status` alone is not enough because the GitHub CLI token and the SSH identity can belong to different accounts.
+
 ## GitHub Release Packaging
 
 GitHub Actions can build the Windows installer automatically after a version tag is pushed or a GitHub Release is published. The workflow is `.github/workflows/release.yml`.
@@ -57,7 +98,7 @@ Typical release command:
 
 ```bash
 git tag v0.1.1
-git push origin v0.1.1
+GIT_SSH_COMMAND='ssh -i ~/.ssh/github_focuxdot_account -o IdentitiesOnly=yes' git push origin v0.1.1
 ```
 
 Before publishing a release:
