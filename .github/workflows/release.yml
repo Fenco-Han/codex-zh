@@ -224,14 +224,31 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          & gh release view $env:RELEASE_TAG --repo $env:GITHUB_REPOSITORY *> $null
-          if ($LASTEXITCODE -ne 0) {
+          $previousErrorActionPreference = $ErrorActionPreference
+          $ErrorActionPreference = "Continue"
+          $releaseViewOutput = & gh release view $env:RELEASE_TAG --repo $env:GITHUB_REPOSITORY 2>&1
+          $releaseViewExitCode = $LASTEXITCODE
+          $ErrorActionPreference = $previousErrorActionPreference
+
+          if ($releaseViewExitCode -eq 0) {
+            Write-Host "Release $env:RELEASE_TAG already exists."
+          } else {
+            $releaseViewText = $releaseViewOutput -join "`n"
+            if ($releaseViewText -notmatch "release not found") {
+              $releaseViewOutput | ForEach-Object { Write-Host $_ }
+              throw "Failed to inspect release $env:RELEASE_TAG with exit code $releaseViewExitCode."
+            }
+
             & gh release create $env:RELEASE_TAG `
               --repo $env:GITHUB_REPOSITORY `
               --target $env:GITHUB_SHA `
               --title "Codex-ZH $env:RELEASE_TAG" `
               --notes "Automated Windows package build for $env:RELEASE_TAG."
+            if ($LASTEXITCODE -ne 0) {
+              throw "Failed to create release $env:RELEASE_TAG."
+            }
           }
+          $global:LASTEXITCODE = 0
 
       - name: Upload release assets
         if: github.event_name == 'release' || github.event_name == 'push'

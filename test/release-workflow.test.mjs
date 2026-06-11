@@ -32,6 +32,9 @@ test("release workflow packages Windows installer after GitHub Release publish",
   assert.match(workflow, /no Codex credentials were found/u);
   assert.match(workflow, /missing credentials in CI; install consistency checks passed/u);
   assert.match(workflow, /\$global:LASTEXITCODE = 0/u);
+  assert.match(workflow, /\$releaseViewOutput = & gh release view \$env:RELEASE_TAG/u);
+  assert.match(workflow, /release not found/u);
+  assert.match(workflow, /Failed to inspect release \$env:RELEASE_TAG/u);
   assert.match(workflow, /gh release create \$env:RELEASE_TAG/u);
   assert.match(workflow, /gh release upload \$env:RELEASE_TAG @assets --clobber/u);
 });
