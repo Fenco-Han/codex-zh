@@ -24,6 +24,8 @@ test("release workflow packages Windows installer after GitHub Release publish",
   assert.match(workflow, /scripts\\build-codex-zh-installer\.ps1/u);
   assert.match(workflow, /\$installerArgs = @\{/u);
   assert.doesNotMatch(workflow, /\$installerArgs = @\(/u);
+  assert.match(workflow, /Start-Process -FilePath \$launcher -ArgumentList @\("--no-launch"\) -Wait -PassThru/u);
+  assert.match(workflow, /\$launcherProcess\.ExitCode/u);
   assert.match(workflow, /\$codexCli doctor --summary --ascii --no-color/u);
   assert.match(workflow, /gh release create \$env:RELEASE_TAG/u);
   assert.match(workflow, /gh release upload \$env:RELEASE_TAG @assets --clobber/u);
