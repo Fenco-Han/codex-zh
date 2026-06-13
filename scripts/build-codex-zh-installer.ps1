@@ -4,7 +4,7 @@ param(
 
   [string]$ProjectRoot = (Resolve-Path ".").Path,
   [string]$OutputDir = "C:\Codex-ZH\installer-output",
-  [string]$Version = "0.1.1",
+  [string]$Version = "0.1.2",
   [string]$InnoStageRoot = "",
   [string]$SourceCodexLabel = ""
 )
