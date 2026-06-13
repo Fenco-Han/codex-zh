@@ -503,11 +503,8 @@ function Repair-ActiveRouterConfigWireApi {
 }
 
 function Get-ProviderPresetMap {
-  # Wokey includes an intentional public test key for first-run validation.
   $presets = [ordered]@{
-    "wokey" = [ordered]@{ provider = "wokey"; providerName = "Wokey"; baseUrl = "https://api.wokey.ai"; model = "auto"; wireApi = "responses"; apiKey = "sk-3d6c1264227a52f75af4028bcc3c217b" }
     "custom" = [ordered]@{ provider = "custom"; providerName = (ZH "6Ieq5a6a5LmJ5Lit6L2s56uZ"); baseUrl = ""; model = ""; wireApi = "responses"; apiKey = "" }
-    "openrouter" = [ordered]@{ provider = "openrouter"; providerName = "OpenRouter"; baseUrl = "https://openrouter.ai/api/v1"; model = "openai/gpt-4.1"; wireApi = "responses"; apiKey = "" }
   }
   foreach ($profile in (Load-SavedRouterProfiles)) {
     if ([string]::IsNullOrWhiteSpace($profile.provider)) { continue }
@@ -899,7 +896,7 @@ public class FlatCfgBtn : Button {
   $presetBox.Location = New-Object System.Drawing.Point($IX, $LY - 2)
   $presetBox.Size = New-Object System.Drawing.Size($IW, 26)
   @($presets.Keys) | ForEach-Object { [void]$presetBox.Items.Add($_) }
-  $presetBox.SelectedItem = "wokey"
+  $presetBox.SelectedItem = "custom"
   $basicCard.Controls.Add($presetBox)
 
   $LY += $ROW
@@ -1064,8 +1061,8 @@ public class FlatCfgBtn : Button {
       if ($presets.Contains($current.provider)) { $presetBox.SelectedItem = $current.provider }
       return
     }
-    $presetBox.SelectedItem = "wokey"
-    Apply-Preset "wokey"
+    $presetBox.SelectedItem = "custom"
+    Apply-Preset "custom"
   }
   Fill-Current
 
@@ -1176,7 +1173,7 @@ if ($NoLaunch) {
   exit 0
 }
 
-if ($Configure -or !(Test-ActiveRouterConfig)) {
+if ($Configure) {
   $configureResult = Show-RouterConfigWindow
   if ($configureResult -ne "launch") {
     $result = New-Result -Status "ready" -Reason "configured"

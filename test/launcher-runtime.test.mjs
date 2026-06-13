@@ -52,14 +52,14 @@ test("staging writes bundled marketplace metadata as UTF-8 without BOM", () => {
   assert.doesNotMatch(staging, /Set-Content -LiteralPath \$marketplacePath -Encoding UTF8/u);
 });
 
-test("launcher presets default to Wokey before custom and OpenRouter", () => {
+test("launcher presets default to custom provider only", () => {
   assert.match(
     launcher,
-    /\$presets = \[ordered\]@\{\s*"wokey" = \[ordered\]@\{[^}]+baseUrl = "https:\/\/api\.wokey\.ai"[^}]+model = "auto"[^}]+apiKey = "sk-3d6c1264227a52f75af4028bcc3c217b"[^}]+\}\s*"custom" = \[ordered\]@\{[^}]+\}\s*"openrouter" = \[ordered\]@\{/u,
+    /\$presets = \[ordered\]@\{\s*"custom" = \[ordered\]@\{[^}]+\}\s*\}/u,
   );
   assert.match(launcher, /Load-SavedRouterProfiles/u);
-  assert.match(launcher, /\$presetBox\.SelectedItem = "wokey"/u);
-  assert.match(launcher, /Apply-Preset "wokey"/u);
+  assert.match(launcher, /\$presetBox\.SelectedItem = "custom"/u);
+  assert.match(launcher, /Apply-Preset "custom"/u);
   assert.match(launcher, /\$apiKeyBox = Add-FieldInput \$IX \$LY \$basicCard/u);
   assert.match(launcher, /\$apiKeyBox\.Text = if \(\$preset\.apiKey\) \{ \$preset\.apiKey \} else \{ "" \}/u);
 });
@@ -86,13 +86,13 @@ test("launcher keeps connection test separate from primary actions", () => {
   assert.match(launcher, /\$saveLaunchButton\.Location\s+= New-Object System\.Drawing\.Point\(580 - 16 - \$BTN_W\*2 - \$BTN_GAP\*2 - 120, \$btnY\)/u);
 });
 
-test("launcher shows router config before runtime initialization when config is missing", () => {
+test("launcher shows router config before runtime initialization when --configure is passed", () => {
   const launchFlowStart = launcher.indexOf('throw "Codex.exe not found: $CodexExe"');
   assert.notEqual(launchFlowStart, -1);
   const launchFlow = launcher.slice(launchFlowStart);
   const noLaunchIndex = launchFlow.indexOf("if ($NoLaunch)");
   const noLaunchInitIndex = launchFlow.indexOf("Initialize-CodexZhRuntime", noLaunchIndex);
-  const configGateIndex = launchFlow.indexOf("if ($Configure -or !(Test-ActiveRouterConfig))");
+  const configGateIndex = launchFlow.indexOf("if ($Configure)");
   const configDialogIndex = launchFlow.indexOf("Show-RouterConfigWindow", configGateIndex);
   const normalInitIndex = launchFlow.indexOf("Initialize-CodexZhRuntime", configGateIndex);
 

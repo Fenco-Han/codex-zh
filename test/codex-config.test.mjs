@@ -60,13 +60,10 @@ test("escapeToml escapes strings safely", () => {
 test("provider presets include common relay options", () => {
   assert.deepEqual(
     listProviderPresets(),
-    ["wokey", "custom", "openrouter"],
+    ["custom"],
   );
-  assert.equal(resolveProviderPreset("openrouter").provider, "openrouter");
-  assert.equal(resolveProviderPreset("openrouter").wireApi, "responses");
-  assert.equal(resolveProviderPreset("wokey").baseUrl, "https://api.wokey.ai");
-  assert.equal(resolveProviderPreset("wokey").model, "auto");
-  assert.equal(resolveProviderPreset("wokey").apiKey, "sk-3d6c1264227a52f75af4028bcc3c217b");
+  assert.equal(resolveProviderPreset("custom").provider, "custom");
+  assert.equal(resolveProviderPreset("custom").wireApi, "responses");
   for (const name of listProviderPresets()) {
     assert.equal(resolveProviderPreset(name).wireApi, "responses");
   }
