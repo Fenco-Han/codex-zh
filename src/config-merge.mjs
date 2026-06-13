@@ -15,6 +15,7 @@ const PROVIDER_OWNED_KEYS = new Set([
   "experimental_bearer_token",
   "name",
   "wire_api",
+  "requires_openai_auth",
 ]);
 
 export function mergeCodexConfig(existing, desired) {

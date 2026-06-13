@@ -416,6 +416,7 @@ function Get-CurrentRouterConfig {
     model = Get-TomlValue -Text $text -Section "" -Key "model"
     wireApi = Get-TomlValue -Text $text -Section $section -Key "wire_api"
     apiKey = Get-TomlValue -Text $text -Section $section -Key "experimental_bearer_token"
+    requiresOpenaiAuth = ((Get-TomlValue -Text $text -Section $section -Key "requires_openai_auth") -eq "true")
   }
 }
 
@@ -435,6 +436,7 @@ function Get-RouterConfigForProvider {
     model = Get-TomlValue -Text $text -Section "" -Key "model"
     wireApi = Get-TomlValue -Text $text -Section $section -Key "wire_api"
     apiKey = Get-TomlValue -Text $text -Section $section -Key "experimental_bearer_token"
+    requiresOpenaiAuth = ((Get-TomlValue -Text $text -Section $section -Key "requires_openai_auth") -eq "true")
   }
 }
 
@@ -470,10 +472,11 @@ function Load-SavedRouterProfiles {
 
 function Test-ActiveRouterConfig {
   $current = Get-CurrentRouterConfig
+  $hasApiKey = ![string]::IsNullOrWhiteSpace($current.apiKey)
   return !([string]::IsNullOrWhiteSpace($current.provider) -or
     [string]::IsNullOrWhiteSpace($current.baseUrl) -or
-    [string]::IsNullOrWhiteSpace($current.model) -or
-    [string]::IsNullOrWhiteSpace($current.apiKey)) -and
+    [string]::IsNullOrWhiteSpace($current.model)) -and
+    ($hasApiKey -or $current.requiresOpenaiAuth) -and
     (Normalize-WireApi -WireApi $current.wireApi) -eq "responses"
 }
 
@@ -534,7 +537,14 @@ function New-CodexRouterConfigText {
     [string]$BaseUrl,
     [string]$Model,
     [string]$WireApi,
-    [string]$ApiKey
+    [string]$ApiKey,
+    [bool]$RequiresOpenaiAuth = $false
+  )
+  $providerLines = @(
+    "name = $(ConvertTo-TomlString $ProviderName)",
+    "base_url = $(ConvertTo-TomlString $BaseUrl)",
+    "wire_api = $(ConvertTo-TomlString $WireApi)",
+    $(if ($RequiresOpenaiAuth) { 'requires_openai_auth = true' } else { "experimental_bearer_token = $(ConvertTo-TomlString $ApiKey)" })
   )
   return @(
     "model = $(ConvertTo-TomlString $Model)",
@@ -542,10 +552,7 @@ function New-CodexRouterConfigText {
     'model_reasoning_effort = "medium"',
     "",
     "[model_providers.$Provider]",
-    "name = $(ConvertTo-TomlString $ProviderName)",
-    "base_url = $(ConvertTo-TomlString $BaseUrl)",
-    "wire_api = $(ConvertTo-TomlString $WireApi)",
-    "experimental_bearer_token = $(ConvertTo-TomlString $ApiKey)",
+    $providerLines,
     "",
     "[desktop]",
     'conversationDetailMode = "STEPS_COMMANDS"',
@@ -564,7 +571,7 @@ function Get-OwnedKeysForTomlSection {
   param([string]$Section)
   if ([string]::IsNullOrWhiteSpace($Section)) { return @("model", "model_provider", "model_reasoning_effort") }
   if ($Section -eq "desktop") { return @("conversationDetailMode") }
-  if ($Section -match '^model_providers\.[A-Za-z0-9_-]+$') { return @("base_url", "experimental_bearer_token", "name", "wire_api") }
+  if ($Section -match '^model_providers\.[A-Za-z0-9_-]+$') { return @("base_url", "experimental_bearer_token", "name", "wire_api", "requires_openai_auth") }
   return @()
 }
 
@@ -661,13 +668,14 @@ function Save-RouterProfile {
     [string]$Model,
     [string]$WireApi,
     [string]$ApiKey,
+    [bool]$RequiresOpenaiAuth = $false,
     [bool]$LastTestOk = $false
   )
 
   [System.IO.Directory]::CreateDirectory($ConfigHome) | Out-Null
   $WireApi = Normalize-WireApi -WireApi $WireApi
   $configPath = Get-ConfigPath
-  $desired = New-CodexRouterConfigText -Provider $Provider -ProviderName $ProviderName -BaseUrl $BaseUrl -Model $Model -WireApi $WireApi -ApiKey $ApiKey
+  $desired = New-CodexRouterConfigText -Provider $Provider -ProviderName $ProviderName -BaseUrl $BaseUrl -Model $Model -WireApi $WireApi -ApiKey $ApiKey -RequiresOpenaiAuth $RequiresOpenaiAuth
   $existing = ""
   if (Test-Path $configPath) {
     $existing = [System.IO.File]::ReadAllText($configPath, [System.Text.Encoding]::UTF8)
@@ -760,132 +768,273 @@ function Show-RouterConfigWindow {
     }
   }
 
+  # -- Owner-drawn button for flat modern style --
+  Add-Type @"
+using System;
+using System.Drawing;
+using System.Windows.Forms;
+public class FlatCfgBtn : Button {
+  public Color FlatBg = Color.FromArgb(240,240,240);
+  public Color FlatFg = Color.FromArgb(51,51,51);
+  public FlatCfgBtn() { FlatStyle = FlatStyle.Flat; FlatAppearance.BorderSize = 1; FlatAppearance.BorderColor = Color.FromArgb(218,220,224); BackColor = Color.White; Cursor = Cursors.Hand; Font = new Font("Microsoft YaHei UI", 9F); }
+  protected override void OnPaint(PaintEventArgs e) {
+    e.Graphics.Clear(Parent != null ? Parent.BackColor : Color.White);
+    Color bg = FlatBg;
+    if (ContainsFocus) bg = Color.FromArgb(Math.Max(FlatBg.R-18,0),Math.Max(FlatBg.G-18,0),Math.Max(FlatBg.B-18,0));
+    else if (ClientRectangle.Contains(PointToClient(Cursor.Position))) bg = Color.FromArgb(Math.Max(FlatBg.R-10,0),Math.Max(FlatBg.G-10,0),Math.Max(FlatBg.B-10,0));
+    using (var br = new SolidBrush(bg)) {
+      var r = new Rectangle(1,1,Width-3,Height-3);
+      int d = Math.Min(6, Math.Min(r.Width, r.Height)/2);
+      e.Graphics.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
+      e.Graphics.FillRectangle(br, r.X+d,r.Y,r.Width-2*d,r.Height);
+      e.Graphics.FillRectangle(br, r.X,r.Y+d,r.Width,r.Height-2*d);
+      e.Graphics.FillPie(br, r.X,r.Y,2*d,2*d, 180,90);
+      e.Graphics.FillPie(br, r.Right-2*d,r.Y,2*d,2*d, 270,90);
+      e.Graphics.FillPie(br, r.X,r.Bottom-2*d,2*d,2*d, 90,90);
+      e.Graphics.FillPie(br, r.Right-2*d,r.Bottom-2*d,2*d,2*d, 0,90);
+    }
+    TextRenderer.DrawText(e.Graphics, Text, Font, r, FlatFg, TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter | TextFormatFlags.SingleLine);
+  }
+}
+"@ -ReferencedAssemblies System.Windows.Forms, System.Drawing, System.Drawing.Common | Out-Null
+
   $form = New-Object System.Windows.Forms.Form
   $form.Text = ZH "Q29kZXgtWkgg5Lit6L2s56uZ6K6+572u"
   $form.StartPosition = "CenterScreen"
-  $form.ClientSize = New-Object System.Drawing.Size(660, 420)
+  $form.ClientSize = New-Object System.Drawing.Size(580, 460)
   $form.FormBorderStyle = "FixedDialog"
   $form.MaximizeBox = $false
   $form.MinimizeBox = $false
-  $font = New-Object System.Drawing.Font("Microsoft YaHei UI", 10)
-  $form.Font = $font
+  $form.BackColor = [System.Drawing.Color]::FromArgb(249,250,251)
+  $form.Font = New-Object System.Drawing.Font("Microsoft YaHei UI", 9.5)
 
-  function Add-Label([string]$Text, [int]$X, [int]$Y) {
-    $label = New-Object System.Windows.Forms.Label
-    $label.Text = $Text
-    $label.Location = New-Object System.Drawing.Point($X, $Y)
-    $label.Size = New-Object System.Drawing.Size(110, 26)
-    $form.Controls.Add($label)
-    return $label
-  }
-  function Add-TextBox([int]$X, [int]$Y, [bool]$Password) {
-    $box = New-Object System.Windows.Forms.TextBox
-    $box.Location = New-Object System.Drawing.Point($X, $Y)
-    $box.Size = New-Object System.Drawing.Size(440, 26)
-    if ($Password) { $box.UseSystemPasswordChar = $true }
-    $form.Controls.Add($box)
-    return $box
+  # Card panels (painted via OnPaint)
+  $basicCard = New-Object System.Windows.Forms.Panel
+  $basicCard.Location = New-Object System.Drawing.Point(16, 88)
+  $basicCard.Size = New-Object System.Drawing.Size(548, 188)
+  $basicCard.BackColor = [System.Drawing.Color]::White
+  $form.Controls.Add($basicCard)
+
+  $advancedCard = New-Object System.Windows.Forms.Panel
+  $advancedCard.Location = New-Object System.Drawing.Point(16, 320)
+  $advancedCard.Size = New-Object System.Drawing.Size(548, 136)
+  $advancedCard.BackColor = [System.Drawing.Color]::White
+  $form.Controls.Add($advancedCard)
+
+  $form.Add_Paint({
+    param($s, $e)
+    $g = $e.Graphics
+    $g.SmoothingMode = [System.Drawing.Drawing2D.SmoothingMode]::AntiAlias
+    foreach ($card in @($basicCard, $advancedCard)) {
+      if (!$card.Visible) { continue }
+      $cRect = $card.RectangleToScreen($card.ClientRectangle)
+      $r = $form.RectangleToClient($cRect)
+      $borderColor = [System.Drawing.Color]::FromArgb(229,231,235)
+      $pen = New-Object System.Drawing.Pen($borderColor, 1)
+      $d = 8
+      $path = New-Object System.Drawing.Drawing2D.GraphicsPath
+      $path.AddArc($r.X, $r.Y, $d*2, $d*2, 180, 90)
+      $path.AddArc($r.Right-$d*2, $r.Y, $d*2, $d*2, 270, 90)
+      $path.AddArc($r.Right-$d*2, $r.Bottom-$d*2, $d*2, $d*2, 0, 90)
+      $path.AddArc($r.X, $r.Bottom-$d*2, $d*2, $d*2, 90, 90)
+      $path.CloseFigure()
+      $g.DrawPath($pen, $path)
+      $pen.Dispose(); $path.Dispose()
+    }
+  })
+
+  # -- Helper: create a field label --
+  $labelFont = New-Object System.Drawing.Font("Microsoft YaHei UI", 9)
+  function Add-FieldLabel([string]$Text, [int]$X, [int]$Y, [System.Windows.Forms.Control]$Parent) {
+    $l = New-Object System.Windows.Forms.Label
+    $l.Text = $Text
+    $l.Font = $labelFont
+    $l.ForeColor = [System.Drawing.Color]::FromArgb(107,114,128)
+    $l.Location = New-Object System.Drawing.Point($X, $Y)
+    $l.Size = New-Object System.Drawing.Size(80, 22)
+    $l.TextAlign = "TopLeft"
+    $Parent.Controls.Add($l)
+    return $l
   }
 
+  # -- Helper: create a styled input --
+  function Add-FieldInput([int]$X, [int]$Y, [System.Windows.Forms.Control]$Parent, [bool]$Password = $false) {
+    $tb = New-Object System.Windows.Forms.TextBox
+    $tb.Location = New-Object System.Drawing.Point($X, $Y)
+    $tb.Size = New-Object System.Drawing.Size(410, 26)
+    $tb.BorderStyle = "FixedSingle"
+    $tb.BackColor = [System.Drawing.Color]::White
+    if ($Password) { $tb.UseSystemPasswordChar = $true }
+    $Parent.Controls.Add($tb)
+    return $tb
+  }
+
+  # ================================================================
+  # Header
+  # ================================================================
   $title = New-Object System.Windows.Forms.Label
   $title.Text = ZH "6YCJ5oup5Lit6L2s56uZ"
   $title.Font = New-Object System.Drawing.Font("Microsoft YaHei UI", 16, [System.Drawing.FontStyle]::Bold)
-  $title.Location = New-Object System.Drawing.Point(32, 24)
-  $title.Size = New-Object System.Drawing.Size(596, 38)
+  $title.ForeColor = [System.Drawing.Color]::FromArgb(31,41,55)
+  $title.Location = New-Object System.Drawing.Point(16, 16)
+  $title.Size = New-Object System.Drawing.Size(500, 40)
   $form.Controls.Add($title)
 
-  Add-Label (ZH "5Lit6L2s56uZ") 48 82 | Out-Null
+  $subtitle = New-Object System.Windows.Forms.Label
+  $subtitle.Text = ZH "5Lit6L2s56uZ5Y6f55Sf5o6l"
+  $subtitle.Font = New-Object System.Drawing.Font("Microsoft YaHei UI", 9)
+  $subtitle.ForeColor = [System.Drawing.Color]::FromArgb(156,163,175)
+  $subtitle.Location = New-Object System.Drawing.Point(16, 58)
+  $subtitle.Size = New-Object System.Drawing.Size(500, 22)
+  $form.Controls.Add($subtitle)
+
+  # ================================================================
+  # Basic card — Provider / Base URL / API Key / Model
+  # ================================================================
+  $LY = 12; $LW = 80; $IX = 100; $IW = 410; $ROW = 42
+
+  Add-FieldLabel (ZH "5Lit6L2s56uZ") 16 $LY $basicCard | Out-Null
   $presetBox = New-Object System.Windows.Forms.ComboBox
   $presetBox.DropDownStyle = "DropDownList"
-  $presetBox.Location = New-Object System.Drawing.Point(170, 80)
-  $presetBox.Size = New-Object System.Drawing.Size(440, 26)
+  $presetBox.Location = New-Object System.Drawing.Point($IX, $LY - 2)
+  $presetBox.Size = New-Object System.Drawing.Size($IW, 26)
   @($presets.Keys) | ForEach-Object { [void]$presetBox.Items.Add($_) }
   $presetBox.SelectedItem = "wokey"
-  $form.Controls.Add($presetBox)
+  $basicCard.Controls.Add($presetBox)
 
-  Add-Label (ZH "5o6l5Y+j5Zyw5Z2A") 48 124 | Out-Null
-  $baseUrlBox = Add-TextBox 170 122 $false
-  Add-Label "API Key" 48 166 | Out-Null
-  $apiKeyBox = Add-TextBox 170 164 $false
-  Add-Label (ZH "5qih5Z6L") 48 208 | Out-Null
-  $modelBox = Add-TextBox 170 206 $false
+  $LY += $ROW
+  Add-FieldLabel (ZH "5o6l5Y+j5Zyw5Z2A") 16 $LY $basicCard | Out-Null
+  $baseUrlBox = Add-FieldInput $IX $LY $basicCard
 
+  $LY += $ROW
+  Add-FieldLabel "API Key" 16 $LY $basicCard | Out-Null
+  $apiKeyBox = Add-FieldInput $IX $LY $basicCard
+
+  $LY += 30
+  $useSystemAuthBox = New-Object System.Windows.Forms.CheckBox
+  $useSystemAuthBox.Text = ZH "5L+d5a2Y57O75YiX6K6v5Y+v6KeG57O75YiX"
+  $useSystemAuthBox.Font = $labelFont
+  $useSystemAuthBox.ForeColor = [System.Drawing.Color]::FromArgb(107,114,128)
+  $useSystemAuthBox.Location = New-Object System.Drawing.Point($IX, $LY)
+  $useSystemAuthBox.Size = New-Object System.Drawing.Size($IW, 22)
+  $useSystemAuthBox.Add_CheckedChanged({
+    if ($useSystemAuthBox.Checked) { $apiKeyBox.Text = ""; $apiKeyBox.Enabled = $false }
+    else { $apiKeyBox.Enabled = $true }
+  })
+  $basicCard.Controls.Add($useSystemAuthBox)
+
+  $LY += $ROW
+  Add-FieldLabel (ZH "5qih5Z6L") 16 $LY $basicCard | Out-Null
+  $modelBox = Add-FieldInput $IX $LY $basicCard
+
+  # ================================================================
+  # Advanced toggle (below basic card)
+  # ================================================================
   $advancedToggle = New-Object System.Windows.Forms.CheckBox
   $advancedToggle.Text = ZH "6auY57qn6K6+572u"
-  $advancedToggle.Location = New-Object System.Drawing.Point(170, 248)
-  $advancedToggle.Size = New-Object System.Drawing.Size(180, 28)
+  $advancedToggle.Font = $labelFont
+  $advancedToggle.ForeColor = [System.Drawing.Color]::FromArgb(107,114,128)
+  $advancedToggle.Location = New-Object System.Drawing.Point(16, 288)
+  $advancedToggle.Size = New-Object System.Drawing.Size(200, 24)
   $form.Controls.Add($advancedToggle)
 
-  $providerLabel = Add-Label "Provider ID" 48 292
-  $providerBox = Add-TextBox 170 290 $false
-  $nameLabel = Add-Label (ZH "5pi+56S65ZCN56ew") 48 334
-  $nameBox = Add-TextBox 170 332 $false
-  $wireLabel = Add-Label (ZH "5o6l5Y+j57G75Z6L") 48 376
+  # ================================================================
+  # Advanced card — Provider ID / Name / Wire API
+  # ================================================================
+  $aLY = 12
+  Add-FieldLabel "Provider ID" 16 $aLY $advancedCard | Out-Null
+  $providerBox = Add-FieldInput $IX $aLY $advancedCard
+
+  $aLY += $ROW
+  Add-FieldLabel (ZH "5pi+56S65ZCN56ew") 16 $aLY $advancedCard | Out-Null
+  $nameBox = Add-FieldInput $IX $aLY $advancedCard
+
+  $aLY += $ROW
+  Add-FieldLabel (ZH "5o6l5Y+j57G75Z6L") 16 $aLY $advancedCard | Out-Null
   $wireBox = New-Object System.Windows.Forms.ComboBox
   $wireBox.DropDownStyle = "DropDownList"
-  $wireBox.Location = New-Object System.Drawing.Point(170, 374)
-  $wireBox.Size = New-Object System.Drawing.Size(440, 26)
+  $wireBox.Location = New-Object System.Drawing.Point($IX, $aLY)
+  $wireBox.Size = New-Object System.Drawing.Size($IW, 26)
   [void]$wireBox.Items.Add("responses")
-  $form.Controls.Add($wireBox)
+  $advancedCard.Controls.Add($wireBox)
 
+  # ================================================================
+  # Hint label (repositioned dynamically)
+  # ================================================================
   $hint = New-Object System.Windows.Forms.Label
   $hint.Text = ZH "5L+d5a2Y5ZCO5Lya5pu05pawIENvZGV4IOmFjee9ru+8jEFQSSBLZXkg5LuF5L+d5a2Y5Zyo5pys5py6IGNvbmZpZy50b21s44CC"
-  $hint.Location = New-Object System.Drawing.Point(48, 292)
-  $hint.Size = New-Object System.Drawing.Size(580, 30)
-  $hint.ForeColor = [System.Drawing.Color]::DimGray
+  $hint.Font = $labelFont
+  $hint.ForeColor = [System.Drawing.Color]::FromArgb(156,163,175)
+  $hint.Size = New-Object System.Drawing.Size(548, 20)
   $form.Controls.Add($hint)
 
+  # ================================================================
+  # Status label
+  # ================================================================
   $status = New-Object System.Windows.Forms.Label
   $status.Text = ""
-  $status.Location = New-Object System.Drawing.Point(48, 326)
-  $status.Size = New-Object System.Drawing.Size(580, 44)
+  $status.Size = New-Object System.Drawing.Size(548, 22)
   $form.Controls.Add($status)
 
-  $cancelButton = New-Object System.Windows.Forms.Button
-  $cancelButton.Text = ZH "5Y+W5raI"
-  $cancelButton.Location = New-Object System.Drawing.Point(332, 372)
-  $cancelButton.Size = New-Object System.Drawing.Size(80, 34)
-  $cancelButton.Add_Click({ $form.Tag = "cancel"; $form.Close() })
-  $form.Controls.Add($cancelButton)
+  # ================================================================
+  # Action buttons (owner-drawn flat style)
+  # ================================================================
+  $BTN_W = 88; $BTN_H = 36; $BTN_GAP = 10
 
-  $testButton = New-Object System.Windows.Forms.Button
+  $testButton = New-Object FlatCfgBtn
   $testButton.Text = ZH "5rWL6K+V6L+e5o6l"
-  $testButton.Location = New-Object System.Drawing.Point(48, 372)
-  $testButton.Size = New-Object System.Drawing.Size(100, 34)
-  $form.Controls.Add($testButton)
+  $testButton.Size = New-Object System.Drawing.Size($BTN_W, $BTN_H)
 
-  $saveButton = New-Object System.Windows.Forms.Button
+  $cancelButton = New-Object FlatCfgBtn
+  $cancelButton.Text = ZH "5Y+W5raI"
+  $cancelButton.Size = New-Object System.Drawing.Size($BTN_W, $BTN_H)
+
+  $saveButton = New-Object FlatCfgBtn
   $saveButton.Text = ZH "5L+d5a2Y"
-  $saveButton.Location = New-Object System.Drawing.Point(422, 372)
-  $saveButton.Size = New-Object System.Drawing.Size(80, 34)
-  $form.Controls.Add($saveButton)
+  $saveButton.Size = New-Object System.Drawing.Size($BTN_W, $BTN_H)
 
-  $saveLaunchButton = New-Object System.Windows.Forms.Button
+  $saveLaunchButton = New-Object FlatCfgBtn
   $saveLaunchButton.Text = ZH "5L+d5a2Y5bm25ZCv5Yqo"
-  $saveLaunchButton.Location = New-Object System.Drawing.Point(512, 372)
-  $saveLaunchButton.Size = New-Object System.Drawing.Size(116, 34)
-  $form.Controls.Add($saveLaunchButton)
+  $saveLaunchButton.Size = New-Object System.Drawing.Size(120, $BTN_H)
+  $saveLaunchButton.FlatBg = [System.Drawing.Color]::FromArgb(37,99,235)
+  $saveLaunchButton.FlatFg = [System.Drawing.Color]::White
 
-  $advancedControls = @($providerLabel, $providerBox, $nameLabel, $nameBox, $wireLabel, $wireBox)
+  foreach ($btn in @($testButton, $cancelButton, $saveButton, $saveLaunchButton)) { $form.Controls.Add($btn) }
+
+  # ================================================================
+  # Layout recalculation on advanced toggle
+  # ================================================================
+  $advancedControls = @($providerBox, $nameBox, $wireBox)
   function Set-AdvancedVisible {
     param([bool]$Visible)
-    foreach ($control in $advancedControls) {
-      $control.Visible = $Visible
+    $advancedCard.Visible = $Visible
+    $advancedToggle.Checked = $Visible
+    if ($Visible) {
+      $form.ClientSize = New-Object System.Drawing.Size(580, 520)
+      $hint.Location  = New-Object System.Drawing.Point(16, 468)
+      $status.Location = New-Object System.Drawing.Point(16, 490)
+      $btnY = 520 - $BTN_H - 16
+      $testButton.Location     = New-Object System.Drawing.Point(16, $btnY)
+      $cancelButton.Location   = New-Object System.Drawing.Point(580 - 16 - $BTN_W, $btnY)
+      $saveButton.Location     = New-Object System.Drawing.Point(580 - 16 - $BTN_W*2 - $BTN_GAP, $btnY)
+      $saveLaunchButton.Location = New-Object System.Drawing.Point(580 - 16 - $BTN_W*2 - $BTN_GAP*2 - 120, $btnY)
+    } else {
+      $form.ClientSize = New-Object System.Drawing.Size(580, 460)
+      $hint.Location  = New-Object System.Drawing.Point(16, 298)
+      $status.Location = New-Object System.Drawing.Point(16, 320)
+      $btnY = 460 - $BTN_H - 16
+      $testButton.Location     = New-Object System.Drawing.Point(16, $btnY)
+      $cancelButton.Location   = New-Object System.Drawing.Point(580 - 16 - $BTN_W, $btnY)
+      $saveButton.Location     = New-Object System.Drawing.Point(580 - 16 - $BTN_W*2 - $BTN_GAP, $btnY)
+      $saveLaunchButton.Location = New-Object System.Drawing.Point(580 - 16 - $BTN_W*2 - $BTN_GAP*2 - 120, $btnY)
     }
-    $form.ClientSize = if ($Visible) { New-Object System.Drawing.Size(660, 540) } else { New-Object System.Drawing.Size(660, 420) }
-    $contentY = if ($Visible) { 424 } else { 292 }
-    $statusY = if ($Visible) { 458 } else { 326 }
-    $buttonY = if ($Visible) { 492 } else { 372 }
-    $hint.Location = New-Object System.Drawing.Point(48, $contentY)
-    $status.Location = New-Object System.Drawing.Point(48, $statusY)
-    $testButton.Location = New-Object System.Drawing.Point(48, $buttonY)
-    $cancelButton.Location = New-Object System.Drawing.Point(332, $buttonY)
-    $saveButton.Location = New-Object System.Drawing.Point(422, $buttonY)
-    $saveLaunchButton.Location = New-Object System.Drawing.Point(512, $buttonY)
   }
   $advancedToggle.Add_CheckedChanged({ Set-AdvancedVisible $advancedToggle.Checked })
   Set-AdvancedVisible $false
 
+  # ================================================================
+  # Business logic (unchanged)
+  # ================================================================
   function Apply-Preset {
     param([string]$PresetName)
     $preset = $presets[$PresetName]
@@ -906,21 +1055,21 @@ function Show-RouterConfigWindow {
       $baseUrlBox.Text = $current.baseUrl
       $modelBox.Text = $current.model
       $wireBox.SelectedItem = Normalize-WireApi -WireApi $current.wireApi
-      $apiKeyBox.Text = $current.apiKey
-      if ($presets.Contains($current.provider)) {
-        $presetBox.SelectedItem = $current.provider
+      $useSystemAuthBox.Checked = $current.requiresOpenaiAuth
+      if ($current.requiresOpenaiAuth) {
+        $apiKeyBox.Text = ""; $apiKeyBox.Enabled = $false
+      } else {
+        $apiKeyBox.Text = $current.apiKey; $apiKeyBox.Enabled = $true
       }
+      if ($presets.Contains($current.provider)) { $presetBox.SelectedItem = $current.provider }
       return
     }
-
     $presetBox.SelectedItem = "wokey"
     Apply-Preset "wokey"
   }
   Fill-Current
 
-  $presetBox.Add_SelectedIndexChanged({
-    Apply-Preset ([string]$presetBox.SelectedItem)
-  })
+  $presetBox.Add_SelectedIndexChanged({ Apply-Preset ([string]$presetBox.SelectedItem) })
 
   function Read-FormInput {
     $provider = $providerBox.Text.Trim()
@@ -929,6 +1078,7 @@ function Show-RouterConfigWindow {
     $model = $modelBox.Text.Trim()
     $wire = [string]$wireBox.SelectedItem
     $apiKey = $apiKeyBox.Text.Trim()
+    $requiresOpenaiAuth = $useSystemAuthBox.Checked
     $existing = Get-RouterConfigForProvider -Provider $provider
     if ([string]::IsNullOrWhiteSpace($apiKey) -and $existing.provider -eq $provider) {
       $apiKey = $existing.apiKey
@@ -937,52 +1087,54 @@ function Show-RouterConfigWindow {
     if ([string]::IsNullOrWhiteSpace($name)) { throw (ZH "5pi+56S65ZCN56ew5LiN6IO95Li656m644CC") }
     if ([string]::IsNullOrWhiteSpace($baseUrl)) { throw (ZH "5o6l5Y+j5Zyw5Z2A5LiN6IO95Li656m644CC") }
     if ([string]::IsNullOrWhiteSpace($model)) { throw (ZH "5qih5Z6L5LiN6IO95Li656m644CC") }
-    if ([string]::IsNullOrWhiteSpace($apiKey)) { throw (ZH "QVBJIEtleSDkuI3og73kuLrnqbrjgII=") }
+    if (!$requiresOpenaiAuth -and [string]::IsNullOrWhiteSpace($apiKey)) { throw (ZH "QVBJIEtleSDkuI3og73kuLrnqbrjgII=") }
     try { $null = [Uri]$baseUrl } catch { throw (ZH "5o6l5Y+j5Zyw5Z2A5LiN5piv5pyJ5pWIIFVSTOOAgg==") }
     $wire = Normalize-WireApi -WireApi $wire
-    return [ordered]@{ provider = $provider; providerName = $name; baseUrl = $baseUrl; model = $model; wireApi = $wire; apiKey = $apiKey }
+    return [ordered]@{ provider = $provider; providerName = $name; baseUrl = $baseUrl; model = $model; wireApi = $wire; apiKey = $apiKey; requiresOpenaiAuth = $requiresOpenaiAuth }
   }
 
   function Run-Test {
     try {
       $input = Read-FormInput
-      $status.ForeColor = [System.Drawing.Color]::DimGray
+      $status.ForeColor = [System.Drawing.Color]::FromArgb(156,163,175)
       $status.Text = ZH "5q2j5Zyo5rWL6K+V6L+e5o6lLi4u"
       $form.Refresh()
       $result = Test-RouterProviderConnection -BaseUrl $input.baseUrl -ApiKey $input.apiKey -Model $input.model -WireApi $input.wireApi
-      if ($result.ok) { $status.ForeColor = [System.Drawing.Color]::DarkGreen } else { $status.ForeColor = [System.Drawing.Color]::Firebrick }
+      if ($result.ok) { $status.ForeColor = [System.Drawing.Color]::FromArgb(22,163,74) } else { $status.ForeColor = [System.Drawing.Color]::FromArgb(220,38,38) }
       $status.Text = $result.message
       return $result.ok
     } catch {
-      $status.ForeColor = [System.Drawing.Color]::Firebrick
+      $status.ForeColor = [System.Drawing.Color]::FromArgb(220,38,38)
       $status.Text = $_.Exception.Message
       return $false
     }
   }
 
   $testButton.Add_Click({ [void](Run-Test) })
+
+  $cancelButton.Add_Click({ $form.Tag = "cancel"; $form.Close() })
+
   $saveButton.Add_Click({
     try {
       $input = Read-FormInput
-      Save-RouterProfile -Provider $input.provider -ProviderName $input.providerName -BaseUrl $input.baseUrl -Model $input.model -WireApi $input.wireApi -ApiKey $input.apiKey -LastTestOk $false
-      $status.ForeColor = [System.Drawing.Color]::DarkGreen
+      Save-RouterProfile -Provider $input.provider -ProviderName $input.providerName -BaseUrl $input.baseUrl -Model $input.model -WireApi $input.wireApi -ApiKey $input.apiKey -RequiresOpenaiAuth $input.requiresOpenaiAuth -LastTestOk $false
+      $status.ForeColor = [System.Drawing.Color]::FromArgb(22,163,74)
       $status.Text = ZH "5bey5L+d5a2Y6YWN572u44CC"
-      $form.Tag = "saved"
-      $form.Close()
+      $form.Tag = "saved"; $form.Close()
     } catch {
-      $status.ForeColor = [System.Drawing.Color]::Firebrick
+      $status.ForeColor = [System.Drawing.Color]::FromArgb(220,38,38)
       $status.Text = $_.Exception.Message
     }
   })
+
   $saveLaunchButton.Add_Click({
     if (Run-Test) {
       try {
         $input = Read-FormInput
-        Save-RouterProfile -Provider $input.provider -ProviderName $input.providerName -BaseUrl $input.baseUrl -Model $input.model -WireApi $input.wireApi -ApiKey $input.apiKey -LastTestOk $true
-        $form.Tag = "launch"
-        $form.Close()
+        Save-RouterProfile -Provider $input.provider -ProviderName $input.providerName -BaseUrl $input.baseUrl -Model $input.model -WireApi $input.wireApi -ApiKey $input.apiKey -RequiresOpenaiAuth $input.requiresOpenaiAuth -LastTestOk $true
+        $form.Tag = "launch"; $form.Close()
       } catch {
-        $status.ForeColor = [System.Drawing.Color]::Firebrick
+        $status.ForeColor = [System.Drawing.Color]::FromArgb(220,38,38)
         $status.Text = $_.Exception.Message
       }
     }

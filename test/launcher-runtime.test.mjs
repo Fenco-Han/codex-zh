@@ -60,21 +60,19 @@ test("launcher presets default to Wokey before custom and OpenRouter", () => {
   assert.match(launcher, /Load-SavedRouterProfiles/u);
   assert.match(launcher, /\$presetBox\.SelectedItem = "wokey"/u);
   assert.match(launcher, /Apply-Preset "wokey"/u);
-  assert.match(launcher, /\$apiKeyBox = Add-TextBox 170 164 \$false/u);
-  assert.doesNotMatch(launcher, /\$apiKeyBox = Add-TextBox 170 164 \$true/u);
+  assert.match(launcher, /\$apiKeyBox = Add-FieldInput \$IX \$LY \$basicCard/u);
   assert.match(launcher, /\$apiKeyBox\.Text = if \(\$preset\.apiKey\) \{ \$preset\.apiKey \} else \{ "" \}/u);
 });
 
 test("launcher router config window keeps advanced fields collapsed and API key visible", () => {
   assert.match(launcher, /Q29kZXgtWkgg5Lit6L2s56uZ6K6\+572u/u);
   assert.match(launcher, /6YCJ5oup5Lit6L2s56uZ/u);
-  assert.match(launcher, /Add-Label \(ZH "5Lit6L2s56uZ"\) 48 82/u);
-  assert.match(launcher, /Add-Label \(ZH "5o6l5Y\+j5Zyw5Z2A"\) 48 124/u);
-  assert.match(launcher, /Add-Label \(ZH "5qih5Z6L"\) 48 208/u);
+  assert.match(launcher, /\$basicCard = New-Object System\.Windows\.Forms\.Panel/u);
+  assert.match(launcher, /\$advancedCard = New-Object System\.Windows\.Forms\.Panel/u);
   assert.match(launcher, /\$advancedToggle = New-Object System\.Windows\.Forms\.CheckBox/u);
   assert.match(launcher, /6auY57qn6K6\+572u/u);
   assert.match(launcher, /Set-AdvancedVisible \$false/u);
-  assert.match(launcher, /\$advancedControls = @\(\$providerLabel, \$providerBox, \$nameLabel, \$nameBox, \$wireLabel, \$wireBox\)/u);
+  assert.match(launcher, /\$advancedControls = @\(\$providerBox, \$nameBox, \$wireBox\)/u);
   assert.match(launcher, /Provider ID/u);
   assert.match(launcher, /5pi\+56S65ZCN56ew/u);
   assert.match(launcher, /5o6l5Y\+j57G75Z6L/u);
@@ -82,11 +80,10 @@ test("launcher router config window keeps advanced fields collapsed and API key 
 });
 
 test("launcher keeps connection test separate from primary actions", () => {
-  assert.match(launcher, /\$testButton\.Location = New-Object System\.Drawing\.Point\(48, 372\)/u);
-  assert.match(launcher, /\$cancelButton\.Location = New-Object System\.Drawing\.Point\(332, 372\)/u);
-  assert.match(launcher, /\$saveButton\.Location = New-Object System\.Drawing\.Point\(422, 372\)/u);
-  assert.match(launcher, /\$saveLaunchButton\.Location = New-Object System\.Drawing\.Point\(512, 372\)/u);
-  assert.match(launcher, /\$testButton\.Location = New-Object System\.Drawing\.Point\(48, \$buttonY\)[\s\S]*\$cancelButton\.Location = New-Object System\.Drawing\.Point\(332, \$buttonY\)/u);
+  assert.match(launcher, /\$testButton\.Location\s+= New-Object System\.Drawing\.Point\(16, \$btnY\)/u);
+  assert.match(launcher, /\$cancelButton\.Location\s+= New-Object System\.Drawing\.Point\(580 - 16 - \$BTN_W, \$btnY\)/u);
+  assert.match(launcher, /\$saveButton\.Location\s+= New-Object System\.Drawing\.Point\(580 - 16 - \$BTN_W\*2 - \$BTN_GAP, \$btnY\)/u);
+  assert.match(launcher, /\$saveLaunchButton\.Location\s+= New-Object System\.Drawing\.Point\(580 - 16 - \$BTN_W\*2 - \$BTN_GAP\*2 - 120, \$btnY\)/u);
 });
 
 test("launcher shows router config before runtime initialization when config is missing", () => {

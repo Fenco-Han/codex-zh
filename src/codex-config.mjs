@@ -6,12 +6,24 @@ export function buildCodexConfig(input) {
   const baseUrl = requireBaseUrl(input.baseUrl);
   const model = requireNonEmpty(input.model, "model");
   const wireApi = requireWireApi(input.wireApi ?? "responses");
-  const apiKey = requireNonEmpty(input.apiKey, "apiKey");
+  const requiresOpenaiAuth = input.requiresOpenaiAuth === true;
+  const apiKey = requiresOpenaiAuth ? "" : requireNonEmpty(input.apiKey, "apiKey");
   const reasoningEffort = requireNonEmpty(input.reasoningEffort ?? "medium", "reasoningEffort");
   const conversationDetailMode = requireNonEmpty(
     input.conversationDetailMode ?? "STEPS_COMMANDS",
     "conversationDetailMode",
   );
+
+  const providerLines = [
+    `name = "${escapeToml(providerName)}"`,
+    `base_url = "${escapeToml(baseUrl)}"`,
+    `wire_api = "${escapeToml(wireApi)}"`,
+  ];
+  if (requiresOpenaiAuth) {
+    providerLines.push(`requires_openai_auth = true`);
+  } else {
+    providerLines.push(`experimental_bearer_token = "${escapeToml(apiKey)}"`);
+  }
 
   return [
     `model = "${escapeToml(model)}"`,
@@ -19,10 +31,7 @@ export function buildCodexConfig(input) {
     `model_reasoning_effort = "${escapeToml(reasoningEffort)}"`,
     "",
     `[model_providers.${provider}]`,
-    `name = "${escapeToml(providerName)}"`,
-    `base_url = "${escapeToml(baseUrl)}"`,
-    `wire_api = "${escapeToml(wireApi)}"`,
-    `experimental_bearer_token = "${escapeToml(apiKey)}"`,
+    ...providerLines,
     "",
     "[desktop]",
     `conversationDetailMode = "${escapeToml(conversationDetailMode)}"`,
